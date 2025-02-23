@@ -7,7 +7,6 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-
 # 🔹 Telegram Bot Token (Replace with your actual bot token)
 BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
 
@@ -18,7 +17,7 @@ ADMIN_ID = 304943570  # Replace with your Telegram User ID
 def get_db_connection():
     return sqlite3.connect("students.db", check_same_thread=False)
 
-# 🔹 Conversation States
+# 💚 Conversation States
 ID, NAME, DEPARTMENT, PHONE = range(4)
 
 # ✅ Start Command - Greets User
@@ -46,12 +45,10 @@ async def get_department(update: Update, context: CallbackContext) -> int:
 # ✅ Save Student Data to Database
 async def get_phone(update: Update, context: CallbackContext) -> int:
     context.user_data["phone"] = update.message.text
-
-    # Connect to database
+    
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Insert student data
+    
     try:
         cursor.execute("""
             INSERT INTO students (student_id, name, department, phone)
@@ -78,10 +75,11 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 
 # ✅ Generate and Send Student List (Admin Only)
 async def send_student_list(update: Update, context: CallbackContext) -> None:
-       logging.debug("send_student_list function called")
+    logging.debug("send_student_list function called")
+    
     if update.message.chat_id != ADMIN_ID:
-    await update.message.reply_text("❌ You are not authorized to access the student list.")
-    return
+        await update.message.reply_text("❌ You are not authorized to access the student list.")
+        return
 
     conn = get_db_connection()
     df = pd.read_sql("SELECT * FROM students", conn)
@@ -103,14 +101,14 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     pdf.cell(200, 10, "Student List", ln=True, align="C")
 
     # Column headers
-    pdf.ln(10)  # Line break for space
+    pdf.ln(10)
     pdf.set_font("Arial", "B", 12)
     pdf.cell(30, 10, "ID", border=1, align="C")
     pdf.cell(50, 10, "Name", border=1, align="C")
     pdf.cell(50, 10, "Student ID", border=1, align="C")
     pdf.cell(40, 10, "Department", border=1, align="C")
     pdf.cell(30, 10, "Phone", border=1, align="C")
-    pdf.ln()  # Line break after headers
+    pdf.ln()
 
     # Table content
     pdf.set_font("Arial", size=12)
@@ -120,13 +118,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         pdf.cell(50, 10, row['student_id'], border=1, align="C")
         pdf.cell(40, 10, row['department'], border=1, align="C")
         pdf.cell(30, 10, row['phone'], border=1, align="C")
-        pdf.ln()  # Line break after each row
-
-    pdf_file = "student_list.pdf"
-    pdf.output(pdf_file)
-    
-    for _, row in df.iterrows():
-        pdf.cell(200, 10, f"{row['id']}: {row['name']} ({row['student_id']}) - {row['department']} - {row['phone']}", ln=True)
+        pdf.ln()
 
     pdf_file = "student_list.pdf"
     pdf.output(pdf_file)
@@ -139,22 +131,20 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # 🔹 Conversation Handler for Registration
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],  # This should be aligned properly
+        entry_points=[CommandHandler("start", start)],
         states={
             ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_id)],
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
             DEPARTMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_department)],
             PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)]
         },
-        fallbacks=[CommandHandler("cancel", cancel)]  # This too should be aligned properly
+        fallbacks=[CommandHandler("cancel", cancel)]
     )
 
-    app.add_handler(conv_handler)  # Correct way to add handler to the app
-    app.add_handler(CommandHandler("list", send_student_list))  # Admin command
+    app.add_handler(conv_handler)
+    app.add_handler(CommandHandler("list", send_student_list))
 
-    # 🔹 Start Bot
     app.run_polling()
 
 if __name__ == "__main__":
