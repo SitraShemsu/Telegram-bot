@@ -78,6 +78,7 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 
 # ✅ Generate and Send Student List (Admin Only)
 async def send_student_list(update: Update, context: CallbackContext) -> None:
+       logging.debug("send_student_list function called")
     if update.message.chat_id != ADMIN_ID:
         await update.message.reply_text("❌ You are not authorized to access the student list.")
         return
