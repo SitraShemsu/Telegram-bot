@@ -1,10 +1,12 @@
-import logging
-logging.basicConfig(level=logging.DEBUG)
 import sqlite3
 import pandas as pd
 from fpdf import FPDF
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 # 🔹 Telegram Bot Token (Replace with your actual bot token)
 BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
@@ -122,7 +124,13 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     pdf_file = "student_list.pdf"
     pdf.output(pdf_file)
     
-        # 🔹 Send Files to Admin
+    for _, row in df.iterrows():
+        pdf.cell(200, 10, f"{row['id']}: {row['name']} ({row['student_id']}) - {row['department']} - {row['phone']}", ln=True)
+
+    pdf_file = "student_list.pdf"
+    pdf.output(pdf_file)
+
+    # 🔹 Send Files to Admin
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(pdf_file, "rb"), caption="📄 Student List (PDF)")
 
