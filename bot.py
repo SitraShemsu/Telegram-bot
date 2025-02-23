@@ -80,8 +80,8 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 async def send_student_list(update: Update, context: CallbackContext) -> None:
        logging.debug("send_student_list function called")
     if update.message.chat_id != ADMIN_ID:
-        await update.message.reply_text("❌ You are not authorized to access the student list.")
-        return
+    await update.message.reply_text("❌ You are not authorized to access the student list.")
+    return
 
     conn = get_db_connection()
     df = pd.read_sql("SELECT * FROM students", conn)
