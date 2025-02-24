@@ -1,29 +1,23 @@
+ 
 import sqlite3
 
-try:
-    conn = sqlite3.connect("students.db")
-    cursor = conn.cursor()
+conn = sqlite3.connect("students.db")
+cursor = conn.cursor()
 
-    # Enable WAL mode for better concurrent writes
-    cursor.execute("PRAGMA journal_mode=WAL;")
+# Enable WAL mode for better concurrent writes
+cursor.execute("PRAGMA journal_mode=WAL;")
 
-    # Create the table if it does not exist
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id TEXT UNIQUE,
-        name TEXT,
-        department TEXT,
-        phone TEXT
-    )
-    """)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT UNIQUE,
+    name TEXT,
+    department TEXT,
+    phone TEXT
+)
+""")
 
-    conn.commit()
+conn.commit()
+conn.close()
 
-    print("Database and table created successfully with WAL mode!")
-
-except sqlite3.Error as e:
-    print(f"Error occurred: {e}")
-
-finally:
-    conn.close()
+print("Database and table created successfully with WAL mode!")
