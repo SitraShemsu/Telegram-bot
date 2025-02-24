@@ -64,9 +64,11 @@ async def get_phone(update: Update, context: CallbackContext) -> int:
         ))
         conn.commit()
 
-        # Add this line to check if the data is inserted
-        print(f"Inserted Data: {context.user_data}")  # Log the inserted data
-
+        # Check the inserted data
+        cursor.execute("SELECT * FROM students")
+        rows = cursor.fetchall()
+        print("Database Contents After Insertion:", rows)  # Print data to verify it's inserted
+        
         await update.message.reply_text("✅ Registration successful!")
     except sqlite3.IntegrityError:
         await update.message.reply_text("❌ Error: This Student ID is already registered.")
