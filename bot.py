@@ -78,6 +78,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     conn = get_db_connection()
     df = pd.read_sql("SELECT * FROM students", conn)
     conn.close()
+    print(df)  # Debugging: Check if data is being retrieved
 
     if df.empty:
         await update.message.reply_text("📂 No students registered yet.")
