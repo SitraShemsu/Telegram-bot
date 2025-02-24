@@ -71,54 +71,75 @@ async def cancel(update: Update, context: CallbackContext) -> int:
 
 # ✅ Generate and Send Student List (Admin Only)
 async def send_student_list(update: Update, context: CallbackContext) -> None:
+    logging.debug("Received /list command")
+
     if update.message.chat_id != ADMIN_ID:
         await update.message.reply_text("❌ You are not authorized to access the student list.")
         return
 
+    logging.debug("Admin authorization successful")
+
     conn = get_db_connection()
-    df = pd.read_sql("SELECT * FROM students", conn)
-    conn.close()
-    print(df)  # Debugging: Check if data is being retrieved
+    try:
+        df = pd.read_sql("SELECT * FROM students", conn)
+    except Exception as e:
+        logging.error(f"Database query failed: {e}")
+        await update.message.reply_text("❌ Error fetching data from the database.")
+        return
+    finally:
+        conn.close()
 
     if df.empty:
+        logging.debug("Database is empty, sending no students message")
         await update.message.reply_text("📂 No students registered yet.")
         return
+
+    logging.debug(f"Fetched {len(df)} students from database")
 
     # 🔹 Export to Excel
     excel_file = "student_list.xlsx"
     df.to_excel(excel_file, index=False)
 
     # 🔹 Export to PDF
-    pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, "Student List", ln=True, align="C")
-
-    # Column headers
-    pdf.ln(10)  # Line break for space
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(30, 10, "ID", border=1, align="C")
-    pdf.cell(50, 10, "Name", border=1, align="C")
-    pdf.cell(50, 10, "Student ID", border=1, align="C")
-    pdf.cell(40, 10, "Department", border=1, align="C")
-    pdf.ln()  # Line break after headers
-
-    # Table content
-    pdf.set_font("Arial", size=12)
-    for _, row in df.iterrows():
-        pdf.cell(30, 10, str(row['id']), border=1, align="C")
-        pdf.cell(50, 10, row['name'], border=1, align="C")
-        pdf.cell(50, 10, row['student_id'], border=1, align="C")
-        pdf.cell(40, 10, row['department'], border=1, align="C")
-        pdf.ln()  # Line break after each row
-
     pdf_file = "student_list.pdf"
-    pdf.output(pdf_file)
+    try:
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, "Student List", ln=True, align="C")
+        pdf.ln(10)  # Line break for space
 
-    # 🔹 Send Files to Admin
-    await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
-    await context.bot.send_document(chat_id=ADMIN_ID, document=open(pdf_file, "rb"), caption="📄 Student List (PDF)")
+        # Column headers
+        pdf.set_font("Arial", "B", 12)
+        pdf.cell(50, 10, "Student ID", border=1, align="C")
+        pdf.cell(60, 10, "Name", border=1, align="C")
+        pdf.cell(60, 10, "Department", border=1, align="C")
+        pdf.ln()
+
+        # Table content
+        pdf.set_font("Arial", size=12)
+        for _, row in df.iterrows():
+            pdf.cell(50, 10, row["student_id"], border=1, align="C")
+            pdf.cell(60, 10, row["name"], border=1, align="C")
+            pdf.cell(60, 10, row["department"], border=1, align="C")
+            pdf.ln()
+
+        pdf.output(pdf_file)
+    except Exception as e:
+        logging.error(f"PDF generation failed: {e}")
+        await update.message.reply_text("❌ Error generating PDF.")
+        return
+
+    logging.debug("Files generated successfully")
+
+    try:
+        await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
+        await context.bot.send_document(chat_id=ADMIN_ID, document=open(pdf_file, "rb"), caption="📄 Student List (PDF)")
+        logging.debug("Files sent successfully")
+    except Exception as e:
+        logging.error(f"Error sending files: {e}")
+        await update.message.reply_text("❌ Error sending files.")
 
 # ✅ Main Function - Runs the Bot
 def main():
