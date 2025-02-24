@@ -3,10 +3,10 @@ import pandas as pd
 from fpdf import FPDF
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
-import os
-import logging
 
+import logging
 logging.basicConfig(level=logging.DEBUG)
+
 
 # 🔹 Telegram Bot Token (Replace with your actual bot token)
 BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
@@ -63,12 +63,6 @@ async def get_phone(update: Update, context: CallbackContext) -> int:
             context.user_data["phone"]
         ))
         conn.commit()
-
-        # Check the inserted data
-        cursor.execute("SELECT * FROM students")
-        rows = cursor.fetchall()
-        print("Database Contents After Insertion:", rows)  # Print data to verify it's inserted
-        
         await update.message.reply_text("✅ Registration successful!")
     except sqlite3.IntegrityError:
         await update.message.reply_text("❌ Error: This Student ID is already registered.")
@@ -96,14 +90,8 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("📂 No students registered yet.")
         return
 
-    # Debug: Print the dataframe to verify the data
-    print("Student Data Retrieved:", df)
-
-    # Set the temporary directory for file storage on Railway
-    temp_dir = "/tmp/"
-
     # 🔹 Export to Excel
-    excel_file = os.path.join(temp_dir, "student_list.xlsx")
+    excel_file = "student_list.xlsx"
     df.to_excel(excel_file, index=False)
 
     # 🔹 Export to PDF
@@ -123,7 +111,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     pdf.cell(30, 10, "Phone", border=1, align="C")
     pdf.ln()  # Line break after headers
 
-    # Table content
+# Table content
     pdf.set_font("Arial", size=12)
     for _, row in df.iterrows():
         pdf.cell(30, 10, str(row['id']), border=1, align="C")
@@ -133,16 +121,39 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         pdf.cell(30, 10, row['phone'], border=1, align="C")
         pdf.ln()  # Line break after each row
 
-    # Save the PDF to the /tmp directory
-    pdf_file = os.path.join(temp_dir, "student_list.pdf")
+    pdf_file = "student_list.pdf"
+    pdf.output(pdf_file)
+    
+    for _, row in df.iterrows():
+        pdf.cell(200, 10, f"{row['id']}: {row['name']} ({row['student_id']}) - {row['department']} - {row['phone']}", ln=True)
+
+    pdf_file = "student_list.pdf"
     pdf.output(pdf_file)
 
     # 🔹 Send Files to Admin
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(pdf_file, "rb"), caption="📄 Student List (PDF)")
 
+# ✅ Main Function - Runs the Bot
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    # 🔹 Conversation Handler for Registration
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],  # This should be aligned properly
+        states={
+            ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_id)],
+            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
+            DEPARTMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_department)],
+            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)]
+        },
+        fallbacks=[CommandHandler("cancel", cancel)]  # This too should be aligned properly
+    
+    app.add_handler(conv_handler)  # Correct way to add handler to the app
+    app.add_handler(CommandHandler("list", send_student_list))  # Admin command
+
     # 🔹 Start Bot
     app.run_polling()
 
-if __name__ == "__main__":
+if name == "main":
     main()
