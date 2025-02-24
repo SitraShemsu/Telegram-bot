@@ -96,6 +96,9 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         await update.message.reply_text("📂 No students registered yet.")
         return
 
+    # Debug: Print the dataframe to verify the data
+    print("Student Data Retrieved:", df)
+
     # Set the temporary directory for file storage on Railway
     temp_dir = "/tmp/"
 
@@ -137,25 +140,6 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     # 🔹 Send Files to Admin
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(pdf_file, "rb"), caption="📄 Student List (PDF)")
-
-# ✅ Main Function - Runs the Bot
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    # 🔹 Conversation Handler for Registration
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],  # This should be aligned properly
-        states={
-            ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_id)],
-            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
-            DEPARTMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_department)],
-            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)]
-        },
-        fallbacks=[CommandHandler("cancel", cancel)]  # This too should be aligned properly
-    )
-
-    app.add_handler(conv_handler)  # Correct way to add handler to the app
-    app.add_handler(CommandHandler("list", send_student_list))  # Admin command
 
     # 🔹 Start Bot
     app.run_polling()
