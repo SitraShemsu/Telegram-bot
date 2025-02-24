@@ -111,8 +111,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     pdf.cell(30, 10, "Phone", border=1, align="C")
     pdf.ln()  # Line break after headers
 
-
-# Table content
+    # Table content
     pdf.set_font("Arial", size=12)
     for _, row in df.iterrows():
         pdf.cell(30, 10, str(row['id']), border=1, align="C")
@@ -157,5 +156,6 @@ def main():
     # 🔹 Start Bot
     app.run_polling()
 
-if name == "main":
+# This should be __name__, not name
+if __name__ == "__main__":
     main()
