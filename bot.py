@@ -7,7 +7,6 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-
 # 🔹 Telegram Bot Token (Replace with your actual bot token)
 BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
 
@@ -19,7 +18,7 @@ def get_db_connection():
     return sqlite3.connect("students.db", check_same_thread=False)
 
 # 🔹 Conversation States
-ID, NAME, DEPARTMENT, PHONE = range(4)
+ID, NAME, DEPARTMENT = range(3)
 
 # ✅ Start Command - Greets User
 async def start(update: Update, context: CallbackContext) -> int:
@@ -38,14 +37,9 @@ async def get_name(update: Update, context: CallbackContext) -> int:
     await update.message.reply_text("Enter your Department:")
     return DEPARTMENT
 
+# ✅ Save Student Data to Database
 async def get_department(update: Update, context: CallbackContext) -> int:
     context.user_data["department"] = update.message.text
-    await update.message.reply_text("Enter your Phone Number:")
-    return PHONE
-
-# ✅ Save Student Data to Database
-async def get_phone(update: Update, context: CallbackContext) -> int:
-    context.user_data["phone"] = update.message.text
 
     # Connect to database
     conn = get_db_connection()
@@ -54,13 +48,12 @@ async def get_phone(update: Update, context: CallbackContext) -> int:
     # Insert student data
     try:
         cursor.execute("""
-            INSERT INTO students (student_id, name, department, phone)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO students (student_id, name, department)
+            VALUES (?, ?, ?)
         """, (
             context.user_data["student_id"],
             context.user_data["name"],
-            context.user_data["department"],
-            context.user_data["phone"]
+            context.user_data["department"]
         ))
         conn.commit()
         await update.message.reply_text("✅ Registration successful!")
@@ -108,7 +101,6 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     pdf.cell(50, 10, "Name", border=1, align="C")
     pdf.cell(50, 10, "Student ID", border=1, align="C")
     pdf.cell(40, 10, "Department", border=1, align="C")
-    pdf.cell(30, 10, "Phone", border=1, align="C")
     pdf.ln()  # Line break after headers
 
     # Table content
@@ -118,14 +110,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         pdf.cell(50, 10, row['name'], border=1, align="C")
         pdf.cell(50, 10, row['student_id'], border=1, align="C")
         pdf.cell(40, 10, row['department'], border=1, align="C")
-        pdf.cell(30, 10, row['phone'], border=1, align="C")
         pdf.ln()  # Line break after each row
-
-    pdf_file = "student_list.pdf"
-    pdf.output(pdf_file)
-    
-    for _, row in df.iterrows():
-        pdf.cell(200, 10, f"{row['id']}: {row['name']} ({row['student_id']}) - {row['department']} - {row['phone']}", ln=True)
 
     pdf_file = "student_list.pdf"
     pdf.output(pdf_file)
@@ -140,22 +125,20 @@ def main():
 
     # 🔹 Conversation Handler for Registration
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],  # This should be aligned properly
+        entry_points=[CommandHandler("start", start)],
         states={
             ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_id)],
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
-            DEPARTMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_department)],
-            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)]
+            DEPARTMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_department)]
         },
-        fallbacks=[CommandHandler("cancel", cancel)]  # This too should be aligned properly
+        fallbacks=[CommandHandler("cancel", cancel)]
     )
 
-    app.add_handler(conv_handler)  # Correct way to add handler to the app
-    app.add_handler(CommandHandler("list", send_student_list))  # Admin command
+    app.add_handler(conv_handler)
+    app.add_handler(CommandHandler("list", send_student_list))
 
     # 🔹 Start Bot
     app.run_polling()
 
-# This should be __name__, not name
 if __name__ == "__main__":
     main()
