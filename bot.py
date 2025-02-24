@@ -111,6 +111,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     pdf.cell(30, 10, "Phone", border=1, align="C")
     pdf.ln()  # Line break after headers
 
+
 # Table content
     pdf.set_font("Arial", size=12)
     for _, row in df.iterrows():
@@ -148,7 +149,8 @@ def main():
             PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)]
         },
         fallbacks=[CommandHandler("cancel", cancel)]  # This too should be aligned properly
-    
+    )
+
     app.add_handler(conv_handler)  # Correct way to add handler to the app
     app.add_handler(CommandHandler("list", send_student_list))  # Admin command
 
