@@ -63,6 +63,9 @@ async def get_phone(update: Update, context: CallbackContext) -> int:
             context.user_data["phone"]
         ))
         conn.commit()
+        conn.commit()
+print("Data inserted:", context.user_data)  # Log the inserted data
+
         await update.message.reply_text("✅ Registration successful!")
     except sqlite3.IntegrityError:
         await update.message.reply_text("❌ Error: This Student ID is already registered.")
