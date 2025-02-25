@@ -5,11 +5,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
 import logging
 import os
-from dotenv import load_dotenv
 import telegram.error
 
-# Load environment variables
-load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
