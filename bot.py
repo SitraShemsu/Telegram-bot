@@ -9,7 +9,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 # Bot Token and Admin ID
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
 ADMIN_ID = 304943570  # Replace with your Telegram User ID
 
 # Database connection function
