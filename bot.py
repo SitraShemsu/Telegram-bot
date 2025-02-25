@@ -14,9 +14,12 @@ load_dotenv()
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Bot Token and Admin ID from environment variables
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID"))  # Ensure the ADMIN_ID is stored as an int in .env
+# 🔹 Telegram Bot Token (Replace with your actual bot token)
+BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
+
+# 🔹 Admin User ID (Only this user can access student list)
+ADMIN_ID = 304943570  # Replace with your Telegram User ID
+
 
 # Database connection function
 def get_db_connection():
