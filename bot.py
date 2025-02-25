@@ -1,9 +1,10 @@
-import sqlite3
+import sqlite3 
 import pandas as pd
 from fpdf import FPDF
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
 import logging
+import os
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
@@ -78,7 +79,12 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         return
     logging.debug(f"Number of students found: {len(df)}")  # Add this line to verify the student count
     
-    excel_file = "student_list.xlsx"
+    # Define the temporary directory and ensure it exists
+    tmp_dir = "/tmp/"
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+    
+    excel_file = os.path.join(tmp_dir, "student_list.xlsx")
     df.to_excel(excel_file, index=False)
     
     pdf = FPDF()
@@ -101,7 +107,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
         pdf.cell(60, 10, row['department'], border=1, align="C")
         pdf.ln()
     
-    pdf_file = "student_list.pdf"
+    pdf_file = os.path.join(tmp_dir, "student_list.pdf")
     pdf.output(pdf_file)
 
     logging.debug(f"Excel file path: {excel_file}")
