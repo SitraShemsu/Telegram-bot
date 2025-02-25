@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
 
 # 🔹 Admin User ID (Only this user can access student list)
-ADMIN_ID = 304943570  # Replace with your Telegram User ID
+ADMIN_ID = 6663769847  # Replace with your Telegram User ID
 
 
 # Database connection function
