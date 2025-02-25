@@ -5,13 +5,18 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
 import logging
 import os
+from dotenv import load_dotenv
+import telegram.error
+
+# Load environment variables
+load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Bot Token and Admin ID
-BOT_TOKEN = "8122286178:AAG6BemHsT1kmb3RqDJOKnrR8WvDNWpVABE"
-ADMIN_ID = 304943570  # Replace with your Telegram User ID
+# Bot Token and Admin ID from environment variables
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID"))  # Ensure the ADMIN_ID is stored as an int in .env
 
 # Database connection function
 def get_db_connection():
@@ -113,14 +118,17 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     logging.debug(f"Excel file path: {excel_file}")
     logging.debug(f"PDF file path: {pdf_file}")
     
-    await update.message.reply_text("📄 Sending student list...")
-    await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
-    await context.bot.send_document(chat_id=ADMIN_ID, document=open(pdf_file, "rb"), caption="📄 Student List (PDF)")
+    # Use context manager to ensure proper closing of files after sending them
+    with open(excel_file, "rb") as excel_file_data:
+        await context.bot.send_document(chat_id=ADMIN_ID, document=excel_file_data, caption="📄 Student List (Excel)")
+
+    with open(pdf_file, "rb") as pdf_file_data:
+        await context.bot.send_document(chat_id=ADMIN_ID, document=pdf_file_data, caption="📄 Student List (PDF)")
 
 # Main function
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
-    
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -130,11 +138,14 @@ def main():
         },
         fallbacks=[CommandHandler("cancel", cancel)]
     )
-    
+
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler("list", send_student_list))
-    
-    app.run_polling()
+
+    try:
+        app.run_polling()
+    except telegram.error.Conflict:
+        logging.error("Bot instance conflict detected. Please ensure only one bot is running.")
 
 if __name__ == "__main__":
     main()
