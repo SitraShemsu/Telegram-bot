@@ -67,7 +67,8 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     if update.message.chat_id != ADMIN_ID:
         await update.message.reply_text("❌ You are not authorized to access the student list.")
         return
-    
+    logging.debug("Fetching student list...")  # Add this line for debugging
+
     conn = get_db_connection()
     df = pd.read_sql("SELECT * FROM students", conn)
     conn.close()
@@ -75,6 +76,7 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     if df.empty:
         await update.message.reply_text("📂 No students registered yet.")
         return
+    logging.debug(f"Number of students found: {len(df)}")  # Add this line to verify the student count
     
     excel_file = "student_list.xlsx"
     df.to_excel(excel_file, index=False)
