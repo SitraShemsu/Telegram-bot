@@ -103,6 +103,9 @@ async def send_student_list(update: Update, context: CallbackContext) -> None:
     
     pdf_file = "student_list.pdf"
     pdf.output(pdf_file)
+
+    logging.debug(f"Excel file path: {excel_file}")
+    logging.debug(f"PDF file path: {pdf_file}")
     
     await update.message.reply_text("📄 Sending student list...")
     await context.bot.send_document(chat_id=ADMIN_ID, document=open(excel_file, "rb"), caption="📄 Student List (Excel)")
