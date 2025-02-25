@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS students (
     student_id TEXT UNIQUE,
     name TEXT,
     department TEXT,
-    phone TEXT
 )
 """)
 
